@@ -1,0 +1,8 @@
+README.md
+setup.cfg
+setup.py
+m3u_serializer/m3u_serializer.egg-info/PKG-INFO
+m3u_serializer/m3u_serializer.egg-info/SOURCES.txt
+m3u_serializer/m3u_serializer.egg-info/dependency_links.txt
+m3u_serializer/m3u_serializer.egg-info/requires.txt
+m3u_serializer/m3u_serializer.egg-info/top_level.txt

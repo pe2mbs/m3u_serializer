@@ -1,0 +1,3 @@
+requests==2.27.1
+# For development
+pdoc3==0.10.0

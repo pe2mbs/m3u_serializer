@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # M3U Serializer - serialize/de-serialize M3U data streams special for IPTV
 # Copyright (C) 2022  Marc Bertens-Nguyen <m.bertens@pe2mbs.nl>
 #
@@ -16,17 +15,32 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from distutils.core import setup
+class MissingFilenameUrl( Exception ):
+    pass
 
-setup( name             = 'm3u_serializer',
-       version           = '0.1.0',
-       description       = 'M3U serializer/deserializer',
-       author            = 'Marc Bertens-Nguyen',
-       author_email      = 'm.bertens@pe2mbs.nl',
-       url               = 'https://www.pe2mbs.nl/M3U_Serializer/',
-       # packages          = [ 'm3u_serializer' ],
-       install_requires  = [
-             'requests'
-       ]
-)
+
+class DownloadError( Exception ):
+    def __init__( self, status_code ):
+        super( DownloadError, self ).__init__( f'Download error {status_code}' )
+        return
+
+
+class AlreadyOpened( Exception ):
+    pass
+
+
+class NotOpened( Exception ):
+    pass
+
+
+class MissingFilename( Exception ):
+    pass
+
+
+class NoDataAvailable( Exception ):
+    pass
+
+
+class InvalidParameter( Exception ):
+    pass
 
