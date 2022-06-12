@@ -17,7 +17,8 @@
 import logging
 from typing import Optional
 from m3u_serializer.record import M3URecord
-from m3u_serializer.exceptions import MissingFilename, NotOpened
+from m3u_serializer.exceptions import MissingFilename, NotOpened, AlreadyOpened
+from contextlib import contextmanager
 
 log = logging.getLogger( 'M3U-Serializer' )
 
@@ -77,8 +78,39 @@ class M3USerializer( object ):
         :param record:      M3URecord or inherited class
         :return:            None
         """
-        attrs_str = f'tvg-id="{record.TvgId}" tvg-name="{record.TvgName }" tvg-logo="{record.TvgLogo}" group-title="{record.Group}"'
+        attrs_str = record.getAttributes()
         self.__stream.write( f'#EXTINF:{record.Duration} {attrs_str},{record.Name}\n{record.Link}\n' )
         log.debug( f'Writing::\n#EXTINF:{record.Duration} {attrs_str},{record.Name}\n{record.Link}' )
         return
 
+    def __enter__( self ):
+        self.open()
+        return self
+
+    def __exit__( self ):
+        self.__stream.close()
+        return
+
+    @contextmanager
+    def create( self, filename: Optional[str] = None ):
+        try:
+            if isinstance( filename, str ):
+                self.__filename = filename
+
+            if not isinstance( self.__filename, str ):
+                raise MissingFilename()
+
+            if self.__stream is not None:
+                raise AlreadyOpened( f'{self.__filename} as ready open' )
+
+            log.info( f'Opening FILE {self.__filename}' )
+            self.__stream = open( self.__filename, 'w' )
+            # Write header of M3U file
+            self.__stream.write( '#EXTM3U\n' )
+            yield self
+
+        finally:
+            self.__stream.close()
+            self.__stream = None
+
+        return

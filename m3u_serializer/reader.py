@@ -21,6 +21,7 @@ import logging
 import _io
 from m3u_serializer.record import M3URecord
 from m3u_serializer.exceptions import *
+from contextlib import contextmanager
 
 log = logging.getLogger( 'M3U-Deserializer' )
 
@@ -44,7 +45,8 @@ class M3UDeserializer( object ):
     Only the directives #EXTM3U or #EXTINF are supported.
 
     """
-    __RE_ITEM         = re.compile( r"(?:^|\n)#EXTINF:((?:-)\d+(\.\d+)?)([^,]+)?,([A-Z].*?)[\r\n]+(.*)" )
+    # __RE_ITEM         = re.compile( r"(?:^|\n)#EXTINF:([\w+.])([^,]+)?,([A-Z].*?)[\r\n]+(.*)" )
+    __RE_ITEM         = re.compile( r"(?:^|\n)#EXTINF:([-+]?(?:\d*\.\d+|\d+))[. ]([^,]+)?,([A-Z].*?)[\r\n]+(.*)" )
 
     def __init__( self,
                   url_filename: Optional[str] = None,
@@ -70,7 +72,7 @@ class M3UDeserializer( object ):
 
         self.__url_filename = url_filename
         if self.__url_filename is not None:
-            self.open()
+            self.readFrom()
 
         return
 
@@ -92,7 +94,7 @@ class M3UDeserializer( object ):
 
         return
 
-    def open( self, url_filename:Optional[str] = None ) -> None:
+    def readFrom( self, url_filename:Optional[str] = None ) -> None:
         """Opens the url or filename and loads the data to internal memory
 
         :param url_filename:    maybe filename or webaddress, when supplied the stream is directly loaded.
@@ -173,8 +175,37 @@ class M3UDeserializer( object ):
         record = self.__new_record( media_files = self.__media_files )
         for item in self.__RE_ITEM.findall( self.__DATA ):
             record.clear()
-            record.set( item )
+
+            record.set( *item )
             log.debug( f'{record.Group} :: {record}' )
             yield record
+
+        return
+
+    def __enter__( self ):
+        self.open()
+        return self
+
+    def __exit__( self ):
+        self.__DATA = ''
+        return
+
+    @contextmanager
+    def open( self, filename: Optional[str] = None ):
+        try:
+            if isinstance( filename, str ):
+                self.__filename = filename
+
+            if not isinstance( filename, str ):
+                raise MissingFilename()
+
+            if self.__DATA is not None:
+                raise AlreadyOpened( f'{self.__filename} as ready open' )
+
+            self.readFrom( filename )
+            yield self
+
+        finally:
+            self.__DATA = None
 
         return

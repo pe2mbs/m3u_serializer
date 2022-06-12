@@ -4,7 +4,7 @@ M3U serializer / deserializer a lightweight to write and read M3U medie files.
 # Installing
 Install and update using pip:
 
-    $ pip install -U Flask
+    $ pip install -U m3u_serializer
 
 # A Simple Example
 
@@ -24,11 +24,10 @@ Install and update using pip:
         
     # all done
 
+See form aore examples the tests/tests.py
 
 # Links
-* Documentation: https://www.pe2mbs.nl/m3u_serializer/doc
+* Documentation: https://github.com/pe2mbs/m3u_serializer/wiki
 * PyPI Releases: https://pypi.org/project/m3u_serializer/
 * Source Code: https://github.com/pe2mbs/m3u_serializer/
-* Issue Tracker: https://github.com/pe2mbs/m3u_serializer/issues/
-* Website: https://www.pe2mbs.nl/m3u_serializer/
-
+* Issue Tracker: https://github.com/pe2mbs/m3u_serializer/issues

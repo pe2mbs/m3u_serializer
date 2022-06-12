@@ -32,24 +32,14 @@ class M3URecord( object ):
     """
     __RE_ATTRIBUTE      = re.compile( r"(\w*-\w*)=([\"'].*?[\"'])" )
 
-    # Supported attributes by class
-    __ATTR_TVG_ID       = 'tvg-id'
-    __ATTR_TVG_LOGO     = 'tvg-logo'
-    __ATTR_TVG_NAME     = 'tvg-name'
-    __ATTR_GROUP_TITLE  = 'group-title'
-
     def __init__( self, *args, **kwargs ):
         """Constructor
 
         """
-        self.__duration     = -1
+        self.__duration     = '-1'
         self.__name         = ''
         self.__link         = ''
-        self.__group        = ''
         self.__attributes   = {}
-        self.__tvg_id       = ''
-        self.__tvg_logo     = ''
-        self.__tvg_name     = ''
         return
 
     def clear( self ) -> None:
@@ -57,56 +47,83 @@ class M3URecord( object ):
 
         :return:            None
         """
-        self.__duration     = -1
+        self.__duration     = '-1'
         self.__name         = ''
         self.__link         = ''
-        self.__group        = ''
         self.__attributes   = {}
-        self.__tvg_id       = ''
-        self.__tvg_logo     = ''
-        self.__tvg_name     = ''
         return
 
-    def set( self, data: list ) -> None:
+    ARG_DURATION    = 0
+    ARG_ATTRIBUTES  = 1
+    ARG_NAME        = 2
+    ARG_LINK        = 3
+    FULL_ARGS       = 4
+
+    def set( self, *args, **kwargs ) -> None:
         """Sets the record object from a list of elements:
-            0:      duration
-            1:      duration-fraction
-            2:      attributes
-            3:      name (title)
-            4:      stream link address
+            0:      duration (str,int,float)
+            1:      attributes
+            2:      name (title)
+            3:      stream link address
 
         :param data:            list of elements
         :return:                None
         """
-        self.__duration     = int( data[ 0 ].strip() )
-        self.__name         = data[ 3 ].strip()
-        self.__link         = data[ 4 ].strip()
-        for label, value in self.__RE_ATTRIBUTE.findall( data[ 2 ] ):
-            value = value.replace( '"', '' ).strip()
-            if label == self.__ATTR_TVG_ID:
-                self.__tvg_id   = value
-
-            elif label == self.__ATTR_TVG_LOGO:
-                self.__tvg_logo = value
-
-            elif label == self.__ATTR_TVG_NAME:
-                self.__tvg_name = value
-
-            elif label == self.__ATTR_GROUP_TITLE:
-                self.__group    = value
-
-            else:
+        self.__duration     = args[ self.ARG_DURATION ]
+        if len( args ) == self.FULL_ARGS:
+            for label, value in self.__RE_ATTRIBUTE.findall( args[ self.ARG_ATTRIBUTES ] ):
+                value = value.replace( '"', '' ).strip()
                 self.__attributes[ label.strip() ] = value
+
+            offset = self.ARG_NAME
+
+        else:
+            offset = self.ARG_ATTRIBUTES
+
+        self.__name         = args[ offset ].strip()
+        offset += 1
+        self.__link         = args[ offset ].strip()
+        for attr, value in kwargs.items():
+            self.__attributes[ attr ] = value
 
         return
 
     @property
-    def Duration( self ) -> int:
+    def Duration( self ) -> str:
         """Gets the duration of the stream
 
         :return:        Returns the duration of the stream, maybe -1
         """
         return self.__duration
+
+    @Duration.setter
+    def Duration( self, value: Union[str,int,float] ):
+        """Gets the duration of the stream
+
+        :return:        Returns the duration of the stream, maybe -1
+        """
+        if isinstance( value, str ):
+            value = value.strip()
+            try:
+                self.__duration = str( float( value ) )
+
+            except:
+                try:
+                    self.__duration = str( int( value ) )
+
+                except:
+                    raise ValueError( 'M3URecord::Duration as string must contain a int or float' )
+
+        elif isinstance( value, int ):
+            self.__duration = str( value )
+
+        elif isinstance( value, float ):
+            self.__duration = str( value )
+
+        else:
+            self.__duration = '-1'
+
+        return
 
     @property
     def Name( self ) -> str:
@@ -118,8 +135,16 @@ class M3URecord( object ):
 
     @Name.setter
     def Name( self, value: str ):
-        self.__name = value
-        return
+        """Sets the name of the stream
+
+        :param value:   string with value
+        :return:        None
+        """
+        if isinstance( value, str ):
+            self.__name = value
+            return
+
+        raise ValueError( 'M3URecord::Name must contain a string' )
 
     @property
     def Group( self ) -> Optional[str]:
@@ -129,8 +154,20 @@ class M3URecord( object ):
 
         :return:        the group-title or empty string.
         """
-        return self.__group if self.__group is not None else ""
+        return self.__attributes.get( 'group-title', '' )
 
+    @Group.setter
+    def Group( self, value: str ) -> None:
+        """Sets the group-title attribute
+
+        :param value:   string with attribute value
+        :return:        None
+        """
+        if isinstance( value, str ):
+            self.__attributes[ 'group-title' ] = value
+            return
+
+        raise ValueError( 'M3URecord::Group must contain a string' )
 
     @property
     def Link( self ) -> str:
@@ -140,13 +177,39 @@ class M3URecord( object ):
         """
         return self.__link
 
+    @Link.setter
+    def Link( self, value: str ) -> None:
+        """Sets the link value
+
+        :param value:   string with attribute value
+        :return:        None
+        """
+        if isinstance( value, str ):
+            self.__link = value
+            return
+
+        raise ValueError( 'M3URecord::Link must contain a string' )
+
     @property
     def TvgId( self ) -> Optional[str]:
         """When available gets the tvg-id otherwise an empty string
 
         :return:        the tvg-id or empty string.
         """
-        return self.__tvg_id if self.__tvg_id is not None else ""
+        return self.__attributes.get( 'tvg-id', '' )
+
+    @TvgId.setter
+    def TvgId( self, value: str ) -> None:
+        """Sets the tvg-id attribute
+
+        :param value:   string with attribute value
+        :return:        None
+        """
+        if isinstance( value, str ):
+            self.__attributes[ 'tvg-id' ] = value
+            return
+
+        raise ValueError( 'M3URecord::TvgId must contain a string' )
 
     @property
     def TvgLogo( self ) -> Optional[str]:
@@ -154,7 +217,20 @@ class M3URecord( object ):
 
         :return:        the tvg-logo or empty string.
         """
-        return self.__tvg_logo if self.__tvg_logo is not None else ""
+        return self.__attributes.get( 'tvg-logo', '' )
+
+    @TvgLogo.setter
+    def TvgLogo( self, value: str ) -> None:
+        """Sets the tvg-logo attribute
+
+        :param value:   string with attribute value
+        :return:        None
+        """
+        if isinstance( value, str ):
+            self.__attributes[ 'tvg-logo' ] = value
+            return
+
+        raise ValueError( 'M3URecord::TvgLogo must contain a string' )
 
     @property
     def TvgName( self ) -> Optional[str]:
@@ -162,16 +238,50 @@ class M3URecord( object ):
 
         :return:        the tvg-name or empty string.
         """
-        return self.__tvg_name if self.__tvg_name is not None else ""
+        return self.__attributes.get( 'tvg-name', '' )
 
-    def attribute( self, key ) -> Optional[str]:
+    @TvgName.setter
+    def TvgName( self, value: str ) -> None:
+        """Sets the tvg-name attribute
+
+        :param value:   string with attribute value
+        :return:        None
+        """
+        if isinstance( value, str ):
+            self.__attributes[ 'tvg-name' ] = value
+            return
+
+        raise ValueError( 'M3URecord::TvgName must contain a string' )
+
+    def attribute( self, key, value: Optional[str] = None ) -> Optional[str]:
         """Returns the attribute requested by key or None
 
         :param key:     name of the attribute
         :rtype:         str or None
         :return:        attribute value as a string
         """
-        return self.__attributes.get( key )
+        if value is None:
+            return self.__attributes.get( key )
+
+        if isinstance( value, str ):
+            self.__attributes[ key ] = value
+            return
+
+        raise ValueError( f'M3URecord::attribute( {key}, value ) must contain a string' )
+
+    def getAttributes( self ) -> str:
+        """This member functions returns a string with attributes and values for writing.
+
+        :return:    string
+        """
+        result = []
+        for attr, value in self.__attributes.items():
+            result.append( f'{attr}="{value}"' )
+
+        return ' '.join( result )
+
+    def __repr__(self):
+        return f'<M3URecord name="{self.__name}", link="{self.__link}">'
 
 
 class M3URecordEx( M3URecord ):
@@ -226,7 +336,7 @@ class M3URecordEx( M3URecord ):
         self.__country      = ''
         return
 
-    def set( self, data: list ) -> None:
+    def set( self, *args, **kwargs ) -> None:
         """Sets the record object from a list of elements:
             0:      duration
             1:      duration-fraction
@@ -241,7 +351,7 @@ class M3URecordEx( M3URecord ):
         :param data:            list of elements
         :return:                None
         """
-        super( M3URecordEx, self ).set( data )
+        super( M3URecordEx, self ).set( *args, **kwargs )
         result = self.__RE_SERIE.search( self.Name )
         if result:
             self.__type     = M3uItemType.SERIE_EPISODE
