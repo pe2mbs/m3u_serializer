@@ -1,13 +1,29 @@
 import unittest
 import os
 from m3u_serializer import M3UDeserializer, M3USerializer, M3URecordEx
+from server import FlaskStub
+import warnings
+
+ROOT_PATH = os.path.abspath( os.path.join( os.path.dirname( __file__ ) ) )
+DATA_PATH = os.path.abspath( os.path.join( os.path.dirname( __file__ ), 'data' ) )
 
 
 class TestSuite( unittest.TestCase ):
+    """This unittest class contains only happy flow tests
+
+    """
+    @classmethod
+    def setUpClass( cls ):
+        warnings.filterwarnings( action = "ignore", message = "unclosed", category = ResourceWarning )
+        cls.stub = FlaskStub()
+        cls.stub.start()
+        return
+
     def setUp(self) -> None:
-        print( f"\nTest case: {self._testMethodName}" )
+        self.subTest()
+        print( f"\nTest case: {self.id()}" )
         if self._testMethodDoc is not None:
-            print( f"Description: {self._testMethodDoc}" )
+            print( f"Description: {self.shortDescription()}" )
 
         return
 
@@ -16,7 +32,7 @@ class TestSuite( unittest.TestCase ):
 
         """
         deserializer = M3UDeserializer( new_record = M3URecordEx )
-        deserializer.readFrom( os.path.abspath( os.path.join( 'data', 'input-data.m3u' ) ) )
+        deserializer.open( os.path.join( DATA_PATH, 'input-data.m3u' ) )
         for channel in deserializer:
             print( f'Read: {channel}' )
             self.assertIn( channel.Duration, ( '-1', '1.45' ) )
@@ -32,7 +48,7 @@ class TestSuite( unittest.TestCase ):
 
         """
         deserializer = M3UDeserializer( new_record = M3URecordEx )
-        deserializer.readFrom( os.path.abspath( os.path.join( 'data', 'input-invalid-format.m3u' ) ) )
+        deserializer.open( os.path.join( ROOT_PATH, 'data', 'input-invalid-format.m3u' ) )
         for channel in deserializer:
             print( f'Read: {channel}' )
             self.assertEqual( '-1', channel.Duration )
@@ -46,14 +62,16 @@ class TestSuite( unittest.TestCase ):
         """This test opens a URL and de-serialize the the M3U records
 
         """
-        url = 'https://raw.githubusercontent.com/pe2mbs/m3u_serializer/main/tests/data/test.m3u'
-        with M3UDeserializer( new_record = M3URecordEx ).open( url ) as deserializer:
+        url = 'http://scuzzy:5000/m3u'
+        url = 'http://localhost:5000'
+        with M3UDeserializer( url, new_record = M3URecordEx ) as deserializer:
             for channel in deserializer:
                 print( f'Read: {channel}' )
-                self.assertEqual( '-1', channel.Duration )
-                self.assertEqual( "NPO 1", channel.Name )
+                self.assertIn( channel.Duration, ( '-1', '1.45' ) )
+                self.assertIn( channel.Name, ( "NPO 1", "NPO 2" ) )
                 self.assertEqual( "Nederland SD", channel.Group )
-                self.assertEqual( "http://iptv.example.org/some/route/channel", channel.Link )
+                self.assertIn( channel.Link, ( "http://iptv.example.org/some/route/channel",
+                                               'http://iptv.example.org/some/route/channel2' ) )
 
         return
 
@@ -61,7 +79,7 @@ class TestSuite( unittest.TestCase ):
         """This test create a file and serialize a M3U record.
 
         """
-        with M3USerializer().create( os.path.abspath( os.path.join( 'data', 'test-copy.m3u' ) ) ) as stream:
+        with M3USerializer( os.path.join( ROOT_PATH, 'data', 'test-copy.m3u' ) ) as stream:
             channel = M3URecordEx()
             channel.set( -1, 'group-title="Nederland SD"', 'NPO 1', 'http://iptv.example.org/some/route/channel' )
             print( f'Writing: {channel}' )
@@ -73,7 +91,7 @@ class TestSuite( unittest.TestCase ):
         """This test create a file and serialize a M3U record.
 
         """
-        with M3USerializer().create( os.path.abspath( os.path.join( 'data', 'test-wo-attr.m3u' ) ) ) as stream:
+        with M3USerializer( os.path.join( ROOT_PATH, 'data', 'test-wo-attr.m3u' ) ) as stream:
             channel = M3URecordEx()
             channel.set( -1, 'NPO 1', 'http://iptv.example.org/some/route/channel' )
             print( f'Writing: {channel}' )
@@ -85,7 +103,7 @@ class TestSuite( unittest.TestCase ):
         """This test create a file and serialize a M3U record.
 
         """
-        with M3USerializer().create( os.path.abspath( os.path.join( 'data', 'test-with-attr.m3u' ) ) ) as stream:
+        with M3USerializer( os.path.join( ROOT_PATH, 'data', 'test-with-attr.m3u' ) ) as stream:
             channel = M3URecordEx()
             attrs = {
                 'tgv-id': 'www.npo1.nl',
@@ -103,7 +121,7 @@ class TestSuite( unittest.TestCase ):
         """This test create a file and serialize a M3U record.
 
         """
-        with M3USerializer().create( os.path.abspath( os.path.join( 'data', 'test-with-attr-ex.m3u' ) ) ) as stream:
+        with M3USerializer( os.path.join( ROOT_PATH, 'data', 'test-with-attr-ex.m3u' ) ) as stream:
             channel = M3URecordEx()
             attrs = {
                 'tgv-id': 'www.npo1.nl',
@@ -124,11 +142,10 @@ class TestSuite( unittest.TestCase ):
 
         """
         groups = [ 'Nederland SD' ]
-        m3uReader = M3UDeserializer( os.path.abspath( os.path.join( 'data', 'input-data.m3u' ) ) )
-        m3uwriter = M3USerializer( os.path.abspath( os.path.join( 'data', 'test-copy-output.m3u' ) ) )
-        with m3uwriter.create() as out_stream:
-            for channel in m3uReader:
-                # do some filtering
-                if channel.Group in groups:
-                    print( f'Copy {channel}' )
-                    out_stream.write( channel )
+        with M3USerializer( os.path.join( DATA_PATH, 'test-copy-output.m3u' ) ) as out_stream:
+            with M3UDeserializer( os.path.join( DATA_PATH, 'input-data.m3u' ) ) as in_stream:
+                for channel in in_stream:
+                    # do some filtering
+                    if channel.Group in groups:
+                        print( f'Copy {channel}' )
+                        out_stream.write( channel )
