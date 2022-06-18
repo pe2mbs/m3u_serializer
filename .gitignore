@@ -1,4 +1,6 @@
 venv/
+dist/
+m3u_serializer/m3u_serializer.egg-info/
 .idea/
 html/
 __pycache__/
