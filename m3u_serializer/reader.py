@@ -71,9 +71,6 @@ class M3UDeserializer( object ):
                     self.__media_files.append( item )
 
         self.__url_filename = url_filename
-        if self.__url_filename is not None:
-            self.readFrom()
-
         return
 
     def set( self, data: Union[str,_io.TextIOWrapper] ) -> None:
@@ -94,7 +91,7 @@ class M3UDeserializer( object ):
 
         return
 
-    def readFrom( self, url_filename:Optional[str] = None ) -> None:
+    def open( self, url_filename:Optional[str] = None ) -> None:
         """Opens the url or filename and loads the data to internal memory
 
         :param url_filename:    maybe filename or webaddress, when supplied the stream is directly loaded.
@@ -183,29 +180,14 @@ class M3UDeserializer( object ):
         return
 
     def __enter__( self ):
-        self.open()
+        try:
+            self.open( self.__url_filename )
+
+        except:
+            raise
+
         return self
 
-    def __exit__( self ):
+    def __exit__( self, exc_type, exc_value, exc_traceback ):
         self.__DATA = ''
-        return
-
-    @contextmanager
-    def open( self, filename: Optional[str] = None ):
-        try:
-            if isinstance( filename, str ):
-                self.__filename = filename
-
-            if not isinstance( filename, str ):
-                raise MissingFilename()
-
-            if self.__DATA is not None:
-                raise AlreadyOpened( f'{self.__filename} as ready open' )
-
-            self.readFrom( filename )
-            yield self
-
-        finally:
-            self.__DATA = None
-
         return

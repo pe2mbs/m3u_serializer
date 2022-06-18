@@ -359,13 +359,13 @@ class M3URecordEx( M3URecord ):
             self.__season   = groups[ 2 ].strip()
             self.__episode  = groups[ 4 ].strip()
             self.__genre    = self.Group
-            self.__group    = groups[ 0 ].strip()
+            self.Group      = groups[ 0 ].strip()
 
         else:
             self.__type     = M3uItemType.MOVIE if self.Link.endswith( tuple( self.__MEDIA_FILES ) ) else M3uItemType.IPTV_CHANNEL
             self.__genre    = self.Group
             if self.__type == M3uItemType.MOVIE:
-                self.__group    = f'Movies: {self.__group}'
+                self.Group  = f'Movies: {self.Group}'
 
         for char in ( '|', ':', '-' ):
             self.Name, country = self._retrieve_country_code( self.Name, char )
@@ -435,3 +435,14 @@ class M3URecordEx( M3URecord ):
         """
         return self.__genre if self.__genre is not None else ""
 
+    @property
+    def Season( self ) -> str:
+        return self.__season
+
+    @property
+    def Episode( self ) -> str:
+        return self.__episode
+
+    @property
+    def Country( self ) -> str:
+        return self.__country

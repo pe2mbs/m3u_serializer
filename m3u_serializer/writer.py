@@ -38,7 +38,7 @@ class M3USerializer( object ):
         self.__filename = filename
         return
 
-    def open( self, filename: Optional[str] = None ) -> None:
+    def create( self, filename: Optional[str] = None ) -> None:
         """Opens the output file when the filename is passed to the function it shall use the supplied filename.
 
         when neither the filename in the constructor or this member function, an exception MissingFilename is raised
@@ -49,7 +49,7 @@ class M3USerializer( object ):
         if isinstance( filename, str ):
             self.__filename = filename
 
-        if not isinstance( filename, str ):
+        if not isinstance( self.__filename, str ):
             raise MissingFilename()
 
         log.info( f'Opening FILE {self.__filename}' )
@@ -83,34 +83,11 @@ class M3USerializer( object ):
         log.debug( f'Writing::\n#EXTINF:{record.Duration} {attrs_str},{record.Name}\n{record.Link}' )
         return
 
+
     def __enter__( self ):
-        self.open()
+        self.create()
         return self
 
-    def __exit__( self ):
-        self.__stream.close()
-        return
-
-    @contextmanager
-    def create( self, filename: Optional[str] = None ):
-        try:
-            if isinstance( filename, str ):
-                self.__filename = filename
-
-            if not isinstance( self.__filename, str ):
-                raise MissingFilename()
-
-            if self.__stream is not None:
-                raise AlreadyOpened( f'{self.__filename} as ready open' )
-
-            log.info( f'Opening FILE {self.__filename}' )
-            self.__stream = open( self.__filename, 'w' )
-            # Write header of M3U file
-            self.__stream.write( '#EXTM3U\n' )
-            yield self
-
-        finally:
-            self.__stream.close()
-            self.__stream = None
-
+    def __exit__( self, exc_type, exc_value, exc_traceback ):
+        self.close()
         return

@@ -20,9 +20,7 @@ Regular Expressions are used to deserialize the M3U data stream.
 This is done for speed as IPTV M3U files are quite big.
 
 """
-__version__ = '0.1.0'
-__author__ = 'Marc Bertens-Nguyen'
-
+from m3u_serializer.version import __version__, __author__
 from m3u_serializer.reader import M3UDeserializer
 from m3u_serializer.record import M3URecord, M3URecordEx, M3uItemType
 from m3u_serializer.writer import M3USerializer
