@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import os
 import sys
-from distutils.core import setup
+import setuptools
 __version__ = ''
 __author__ = ''
 # Get the root path of the project
@@ -28,15 +28,15 @@ with open( os.path.abspath( os.path.join( root_path, 'm3u_serializer', 'version.
 
 
 
-setup( name             = 'm3u_serializer',
-       version           = __version__,
-       description       = 'M3U serializer/deserializer',
-       author            = __author__,
-       author_email      = 'm.bertens@pe2mbs.nl',
-       url               = 'https://www.pe2mbs.nl/M3U_Serializer/',
-       # packages          = [ 'm3u_serializer' ],
-       install_requires  = [
-             'requests'
-       ]
+setuptools.setup( name             = 'm3u_serializer',
+                  version          = __version__,
+                  description      = 'M3U serializer/deserializer',
+                  author           = __author__,
+                  author_email     = 'm.bertens@pe2mbs.nl',
+                  url              = 'https://www.pe2mbs.nl/M3U_Serializer/',
+                  package_dir      = { "m3u_serializer": "m3u_serializer" },
+                  install_requires = [
+                     'requests'
+                  ]
 )
 
