@@ -169,10 +169,9 @@ class M3UDeserializer( object ):
         if not isinstance( self.__DATA, str ) or self.__DATA == '':
             raise NoDataAvailable()
 
-        record = self.__new_record( media_files = self.__media_files )
-        for item in self.__RE_ITEM.findall( self.__DATA ):
-            record.clear()
 
+        for item in self.__RE_ITEM.findall( self.__DATA ):
+            record = self.__new_record( media_files = self.__media_files )
             record.set( *item )
             log.debug( f'{record.Group} :: {record}' )
             yield record
