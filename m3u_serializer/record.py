@@ -61,8 +61,8 @@ class M3URecord( object ):
 
     def set( self, *args, **kwargs ) -> None:
         """Sets the record object from a list of elements:
-            0:      duration (str,int,float)
-            1:      attributes
+            0:      duration (str,int or float)
+            1:      attributes (str or dict) [optional]
             2:      name (title)
             3:      stream link address
 
@@ -71,9 +71,14 @@ class M3URecord( object ):
         """
         self.__duration     = args[ self.ARG_DURATION ]
         if len( args ) == self.FULL_ARGS:
-            for label, value in self.__RE_ATTRIBUTE.findall( args[ self.ARG_ATTRIBUTES ] ):
-                value = value.replace( '"', '' ).strip()
-                self.__attributes[ label.strip() ] = value
+            if isinstance( args[ self.ARG_ATTRIBUTES ], str ):
+                for label, value in self.__RE_ATTRIBUTE.findall( args[ self.ARG_ATTRIBUTES ] ):
+                    value = value.replace( '"', '' ).strip()
+                    self.__attributes[ label.strip() ] = value
+
+            elif isinstance( args[ self.ARG_ATTRIBUTES ], dict ):
+                for attr, value in args[ self.ARG_ATTRIBUTES ].items():
+                    self.__attributes[ attr ] = value
 
             offset = self.ARG_NAME
 
@@ -83,9 +88,6 @@ class M3URecord( object ):
         self.__name         = args[ offset ].strip()
         offset += 1
         self.__link         = args[ offset ].strip()
-        for attr, value in kwargs.items():
-            self.__attributes[ attr ] = value
-
         return
 
     @property
@@ -316,6 +318,7 @@ class M3URecordEx( M3URecord ):
         self.__episode      = ''
         self.__genre        = ''
         self.__country      = ''
+        self.__number       = 9999
         if isinstance( media_files, ( list, tuple ) ):
             for item in media_files:
                 if item not in self.__MEDIA_FILES:
@@ -334,15 +337,15 @@ class M3URecordEx( M3URecord ):
         self.__episode      = ''
         self.__genre        = ''
         self.__country      = ''
+        self.__number       = 9999
         return
 
     def set( self, *args, **kwargs ) -> None:
         """Sets the record object from a list of elements:
-            0:      duration
-            1:      duration-fraction
-            2:      attributes
-            3:      name (title)
-            4:      stream link address
+            0:      duration (str,int or float)
+            1:      attributes (str or dict) [optional]
+            2:      name (title)
+            3:      stream link address
 
         And detects the series, movie or TV channel and sets the extra elements as Season, Episode, Genre.
         For series the group-title is set to the series name.
@@ -372,6 +375,28 @@ class M3URecordEx( M3URecord ):
             if country is not None:
                 self.__country = country
                 break
+
+        for key, value in kwargs.items():
+            if key == 'country':
+                self.__country = value
+
+            elif key == 'season':
+                self.__season = value
+
+            elif key == 'episode':
+                self.__episode = value
+
+            elif key == 'genre':
+                self.__genre = value
+
+            elif key == 'type':
+                self.__type = value
+
+            elif key == 'number':
+                self.__number = value
+
+            else:
+                self.attribute( key, value )
 
         return
 
@@ -408,6 +433,10 @@ class M3URecordEx( M3URecord ):
 
     def __repr__(self):
         return f"<M3URecordEx name='{self.Name}' group='{self.Group}' link='{self.Link}'>"
+
+    @property
+    def ChannelNumber( self ) -> int:
+        return self.__number
 
     @property
     def Type( self ) -> M3uItemType:

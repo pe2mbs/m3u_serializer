@@ -169,12 +169,13 @@ class M3UDeserializer( object ):
         if not isinstance( self.__DATA, str ) or self.__DATA == '':
             raise NoDataAvailable()
 
-
+        channelNumber = 1
         for item in self.__RE_ITEM.findall( self.__DATA ):
             record = self.__new_record( media_files = self.__media_files )
-            record.set( *item )
+            record.set( *item, channel = channelNumber )
             log.debug( f'{record.Group} :: {record}' )
             yield record
+            channelNumber += 1
 
         return
 
