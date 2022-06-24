@@ -88,6 +88,19 @@ class M3URecord( object ):
         self.__name         = args[ offset ].strip()
         offset += 1
         self.__link         = args[ offset ].strip()
+        for key, value in kwargs.items():
+            if key == 'group':
+                self.attribute( 'group-title', value )
+
+            elif key == 'id':
+                self.attribute( 'tvg-id', value )
+
+            elif key == 'name':
+                self.attribute( 'tvg-name', value )
+
+            elif key == 'id':
+                self.attribute( 'tvg-logo', value )
+
         return
 
     @property
@@ -283,7 +296,7 @@ class M3URecord( object ):
         return ' '.join( result )
 
     def __repr__(self):
-        return f'<M3URecord name="{self.__name}", link="{self.__link}">'
+        return f'<M3URecord name="{self.__name}" {self.getAttributes()} link="{self.__link}">'
 
 
 class M3URecordEx( M3URecord ):
@@ -354,27 +367,28 @@ class M3URecordEx( M3URecord ):
         :param data:            list of elements
         :return:                None
         """
-        super( M3URecordEx, self ).set( *args, **kwargs )
-        result = self.__RE_SERIE.search( self.Name )
-        if result:
-            self.__type     = M3uItemType.SERIE_EPISODE
-            groups = result.groups()
-            self.__season   = groups[ 2 ].strip()
-            self.__episode  = groups[ 4 ].strip()
-            self.__genre    = self.Group
-            self.Group      = groups[ 0 ].strip()
+        if len( args ) > 0:
+            super( M3URecordEx, self ).set( *args, **kwargs )
+            result = self.__RE_SERIE.search( self.Name )
+            if result:
+                self.__type     = M3uItemType.SERIE_EPISODE
+                groups = result.groups()
+                self.__season   = groups[ 2 ].strip()
+                self.__episode  = groups[ 4 ].strip()
+                self.__genre    = self.Group
+                self.Group      = groups[ 0 ].strip()
 
-        else:
-            self.__type     = M3uItemType.MOVIE if self.Link.endswith( tuple( self.__MEDIA_FILES ) ) else M3uItemType.IPTV_CHANNEL
-            self.__genre    = self.Group
-            if self.__type == M3uItemType.MOVIE:
-                self.Group  = f'Movies: {self.Group}'
+            else:
+                self.__type     = M3uItemType.MOVIE if self.Link.endswith( tuple( self.__MEDIA_FILES ) ) else M3uItemType.IPTV_CHANNEL
+                self.__genre    = self.Group
+                if self.__type == M3uItemType.MOVIE:
+                    self.Group  = f'Movies: {self.Group}'
 
-        for char in ( '|', ':', '-' ):
-            self.Name, country = self._retrieve_country_code( self.Name, char )
-            if country is not None:
-                self.__country = country
-                break
+            for char in ( '|', ':', '-' ):
+                self.Name, country = self._retrieve_country_code( self.Name, char )
+                if country is not None:
+                    self.__country = country
+                    break
 
         for key, value in kwargs.items():
             if key == 'country':
@@ -388,6 +402,9 @@ class M3URecordEx( M3URecord ):
 
             elif key == 'genre':
                 self.__genre = value
+
+            elif key == 'group':
+                self.Group = value
 
             elif key == 'type':
                 self.__type = value
@@ -432,7 +449,7 @@ class M3URecordEx( M3URecord ):
         return name, country
 
     def __repr__(self):
-        return f"<M3URecordEx name='{self.Name}' group='{self.Group}' link='{self.Link}'>"
+        return f"<M3URecordEx name='{self.Name}' {self.getAttributes()} link='{self.Link}'>"
 
     @property
     def ChannelNumber( self ) -> int:
