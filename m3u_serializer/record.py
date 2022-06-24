@@ -15,6 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import re
+import json
 from typing import Union, Optional
 from enum import Enum
 
@@ -297,6 +298,13 @@ class M3URecord( object ):
 
     def __repr__(self):
         return f'<M3URecord name="{self.__name}" {self.getAttributes()} link="{self.__link}">'
+
+    def jsonToAttributes( self, data ):
+        self.__attributes = json.loads( data )
+        return
+
+    def attributesToJson( self ):
+        return json.dumps( self.__attributes )
 
 
 class M3URecordEx( M3URecord ):
