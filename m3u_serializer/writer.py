@@ -15,6 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import logging
+import io
 from typing import Optional
 from m3u_serializer.record import M3URecord
 from m3u_serializer.exceptions import MissingFilename, NotOpened, AlreadyOpened
@@ -29,13 +30,14 @@ class M3USerializer( object ):
     This class writes the M3U file from the M3URecord class
 
     """
-    def __init__( self, filename: Optional[str] = None ):
+    def __init__( self, filename: Optional[str] = None, stream: io.IOBase = None ):
         """Contructor sets optional the filename for writing.
 
         :param filename:    optional output filename
         """
-        self.__stream = None
+        self.__stream = stream
         self.__filename = filename
+        self.__owner = True if stream is not None else False
         return
 
     def create( self, filename: Optional[str] = None ) -> None:
@@ -46,6 +48,9 @@ class M3USerializer( object ):
         :param filename:    optional output filename
         :return:            None
         """
+        if self.__stream is not None and self.__owner:
+            return
+
         if isinstance( filename, str ):
             self.__filename = filename
 
@@ -63,6 +68,9 @@ class M3USerializer( object ):
 
         :return:        None
         """
+        if self.__stream is not None and self.__owner:
+            return
+
         if self.__stream is None:
             raise NotOpened()
 
