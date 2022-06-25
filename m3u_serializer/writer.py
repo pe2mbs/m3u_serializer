@@ -30,7 +30,7 @@ class M3USerializer( object ):
     This class writes the M3U file from the M3URecord class
 
     """
-    def __init__( self, filename: Optional[str] = None, stream: io.IOBase = None ):
+    def __init__( self, filename: Optional[str] = None, stream: io.TextIOBase = None ):
         """Contructor sets optional the filename for writing.
 
         :param filename:    optional output filename
@@ -87,8 +87,14 @@ class M3USerializer( object ):
         :return:            None
         """
         attrs_str = record.getAttributes()
-        self.__stream.write( f'#EXTINF:{record.Duration} {attrs_str},{record.Name}\n{record.Link}\n' )
-        log.debug( f'Writing::\n#EXTINF:{record.Duration} {attrs_str},{record.Name}\n{record.Link}' )
+        line  = f'#EXTINF:{record.Duration} {attrs_str},{record.Name}\n{record.Link}\n'
+        if isinstance( self.__stream, io.BytesIO() ):
+            self.__stream.write( line.encode( 'utf-8' ) )
+
+        else:
+            self.__stream.write( line )
+
+        log.debug( f'Writing::{line}' )
         return
 
 
