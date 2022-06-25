@@ -88,7 +88,7 @@ class M3USerializer( object ):
         """
         attrs_str = record.getAttributes()
         line  = f'#EXTINF:{record.Duration} {attrs_str},{record.Name}\n{record.Link}\n'
-        if isinstance( self.__stream, io.BytesIO() ):
+        if isinstance( self.__stream, io.BytesIO ):
             self.__stream.write( line.encode( 'utf-8' ) )
 
         else:
