@@ -283,6 +283,10 @@ class M3URecord( object ):
             self.__attributes[ key ] = value
             return
 
+        if isinstance( value, int ) and key == 'channel':
+            self.__attributes[ key ] = value
+            return
+
         raise ValueError( f'M3URecord::attribute( {key}, value ) must contain a string' )
 
     def getAttributes( self ) -> str:
